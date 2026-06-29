@@ -58,7 +58,21 @@ async function getBookings() {
       return bookingsData;
     }
     const result = await sql`SELECT * FROM bookings ORDER BY created_at DESC`;
-    return result.rows;
+    // Convert snake_case to camelCase for client
+    return result.rows.map(row => ({
+      id: row.id,
+      fullName: row.full_name,
+      phone: row.phone,
+      email: row.email,
+      eventType: row.event_type,
+      preferredDate: row.preferred_date,
+      guestCount: row.guest_count,
+      budgetRange: row.budget_range,
+      location: row.location,
+      message: row.message,
+      status: row.status,
+      createdAt: row.created_at
+    }));
   } catch (err) {
     console.error('Get bookings error:', err);
     return bookingsData;
@@ -97,7 +111,23 @@ async function updateBooking(id, updates) {
       WHERE id = ${id}
       RETURNING *
     `;
-    return result.rows[0] || null;
+    const row = result.rows[0];
+    if (!row) return null;
+    // Convert snake_case to camelCase for client
+    return {
+      id: row.id,
+      fullName: row.full_name,
+      phone: row.phone,
+      email: row.email,
+      eventType: row.event_type,
+      preferredDate: row.preferred_date,
+      guestCount: row.guest_count,
+      budgetRange: row.budget_range,
+      location: row.location,
+      message: row.message,
+      status: row.status,
+      createdAt: row.created_at
+    };
   } catch (err) {
     console.error('Update booking error:', err);
     const index = bookingsData.findIndex(b => b.id === id);
