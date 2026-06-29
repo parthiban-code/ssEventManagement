@@ -32,9 +32,12 @@ async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       await initializeDB();
-      if (!(await authMiddleware(req, res))) return;
+      const token = authMiddleware(req, res);
+      if (!token) return;
 
       const bookings = await getBookings();
+      console.log('Fetched bookings:', bookings.length, bookings);
+      
       const pending = bookings.filter(b => b.status === 'pending').length;
       const confirmed = bookings.filter(b => b.status === 'approved').length;
       const uniqueClients = new Set(bookings.map(b => b.phone)).size;
@@ -42,8 +45,8 @@ async function handler(req, res) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const upcoming = bookings
-        .filter(b => b.status === 'approved' && new Date(b.preferred_date) >= today)
-        .sort((a, b) => new Date(a.preferred_date) - new Date(b.preferred_date))
+        .filter(b => b.status === 'approved' && new Date(b.preferredDate) >= today)
+        .sort((a, b) => new Date(a.preferredDate) - new Date(b.preferredDate))
         .slice(0, 10);
 
       res.json({

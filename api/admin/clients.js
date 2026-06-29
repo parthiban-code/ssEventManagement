@@ -32,7 +32,8 @@ async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       await initializeDB();
-      if (!(await authMiddleware(req, res))) return;
+      const token = authMiddleware(req, res);
+      if (!token) return;
 
       const bookings = await getBookings();
       const clientsMap = {};
@@ -40,7 +41,7 @@ async function handler(req, res) {
       bookings.forEach(b => {
         if (!clientsMap[b.phone]) {
           clientsMap[b.phone] = {
-            name: b.full_name,
+            name: b.fullName,
             phone: b.phone,
             email: b.email,
             requestCount: 0,
@@ -50,10 +51,10 @@ async function handler(req, res) {
         }
         clientsMap[b.phone].requestCount += 1;
         const lastRequest = clientsMap[b.phone].lastRequest ? new Date(clientsMap[b.phone].lastRequest) : new Date(0);
-        const thisRequest = new Date(b.created_at);
+        const thisRequest = new Date(b.createdAt);
         if (thisRequest > lastRequest) {
-          clientsMap[b.phone].lastRequest = b.created_at;
-          clientsMap[b.phone].lastEventType = b.event_type;
+          clientsMap[b.phone].lastRequest = b.createdAt;
+          clientsMap[b.phone].lastEventType = b.eventType;
         }
       });
 

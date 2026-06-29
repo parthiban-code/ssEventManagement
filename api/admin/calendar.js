@@ -32,7 +32,8 @@ async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       await initializeDB();
-      if (!(await authMiddleware(req, res))) return;
+      const token = authMiddleware(req, res);
+      if (!token) return;
 
       const { month, year } = req.query;
       const m = month || new Date().getMonth() + 1;
@@ -45,7 +46,7 @@ async function handler(req, res) {
 
       const bookings = await getBookings();
       const events = bookings.filter(b => {
-        const bDate = new Date(b.preferred_date);
+        const bDate = new Date(b.preferredDate);
         return b.status === 'approved' && bDate >= startDate && bDate < endDate;
       });
 

@@ -35,7 +35,8 @@ async function handler(req, res) {
     console.error('DB init error:', err);
   }
 
-  if (!(await authMiddleware(req, res))) return;
+  const token = authMiddleware(req, res);
+  if (!token) return;
 
   if (req.method === 'GET') {
     try {
