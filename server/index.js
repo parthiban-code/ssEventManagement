@@ -164,10 +164,17 @@ function formatBooking(row) {
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
+}
+
+// Handle unmatched API routes
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Serve SPA fallback for non-API routes
+if (fs.existsSync(clientDist)) {
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(clientDist, 'index.html'));
-    }
+    res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
 

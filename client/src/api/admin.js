@@ -68,7 +68,7 @@ export async function getBookings() {
 }
 
 export async function updateBookingStatus(id, status) {
-  return adminFetch(`/admin/bookings/${id}/status`, {
+  return adminFetch(`/admin/bookings?id=${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   });
