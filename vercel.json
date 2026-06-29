@@ -1,9 +1,4 @@
 {
   "outputDirectory": "client/dist",
-  "buildCommand": "cd client && npm install && npm run build",
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "buildCommand": "cd client && npm install && npm run build"
 }
