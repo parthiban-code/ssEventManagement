@@ -35,9 +35,16 @@ export default function Booking() {
       });
 
       let data = {};
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
+      try {
+        const text = await res.text();
+        if (text) {
+          data = JSON.parse(text);
+        }
+      } catch (parseErr) {
+        console.error('Failed to parse response:', parseErr);
+        if (!res.ok) {
+          throw new Error(`Server error (${res.status}): ${res.statusText}`);
+        }
       }
 
       if (!res.ok) {

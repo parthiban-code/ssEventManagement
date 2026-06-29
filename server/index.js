@@ -171,6 +171,12 @@ if (fs.existsSync(clientDist)) {
   });
 }
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+});
+
 app.listen(PORT, () => {
   console.log(`SS Event Management server running on http://localhost:${PORT}`);
   console.log(`Admin PIN: ${ADMIN_PIN} (set ADMIN_PIN env var to change)`);
