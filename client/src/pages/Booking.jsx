@@ -34,8 +34,15 @@ export default function Booking() {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Submission failed');
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed with status ${res.status}`);
+      }
 
       setConfirmation(data.id);
     } catch (err) {

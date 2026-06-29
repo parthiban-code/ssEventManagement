@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { getBookings, updateBookingStatus } from '../api/admin';
 
 function StatusBadge({ status }) {
@@ -9,6 +9,7 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -27,6 +28,10 @@ export default function AdminBookings() {
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const toggleDetails = (id) => {
+    setExpandedId((current) => (current === id ? null : id));
   };
 
   const filtered = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter);
@@ -69,41 +74,61 @@ export default function AdminBookings() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((b) => (
-                <tr key={b.id}>
-                  <td className="mono" style={{ fontSize: '0.75rem' }}>{b.id}</td>
-                  <td>
-                    <strong>{b.fullName}</strong>
-                    <br />
-                    <small style={{ color: 'var(--text-muted)' }}>{b.email}</small>
-                  </td>
-                  <td>{b.phone}</td>
-                  <td>{b.eventType}</td>
-                  <td>{b.preferredDate}</td>
-                  <td>{b.guestCount}</td>
-                  <td style={{ fontSize: '0.8rem' }}>{b.budgetRange}</td>
-                  <td><StatusBadge status={b.status} /></td>
-                  <td>
-                    <div className="action-btns">
-                      {b.status !== 'approved' && (
-                        <button className="btn btn-success btn-sm" onClick={() => handleStatus(b.id, 'approved')}>
-                          Approve
-                        </button>
-                      )}
-                      {b.status !== 'rejected' && (
-                        <button className="btn btn-danger btn-sm" onClick={() => handleStatus(b.id, 'rejected')}>
-                          Reject
-                        </button>
-                      )}
-                      {b.status !== 'pending' && (
-                        <button className="btn btn-outline btn-sm" onClick={() => handleStatus(b.id, 'pending')}>
-                          Reset
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((b) => {
+                const isExpanded = expandedId === b.id;
+
+                return (
+                  <Fragment key={b.id}>
+                    <tr>
+                      <td className="mono" style={{ fontSize: '0.75rem' }}>{b.id}</td>
+                      <td>
+                        <strong>{b.fullName}</strong>
+                        <br />
+                        <small style={{ color: 'var(--text-muted)' }}>{b.email}</small>
+                      </td>
+                      <td>{b.phone}</td>
+                      <td>{b.eventType}</td>
+                      <td>{b.preferredDate}</td>
+                      <td>{b.guestCount}</td>
+                      <td style={{ fontSize: '0.8rem' }}>{b.budgetRange}</td>
+                      <td><StatusBadge status={b.status} /></td>
+                      <td>
+                        <div className="action-btns">
+                          <button className="btn btn-outline btn-sm" onClick={() => toggleDetails(b.id)}>
+                            {isExpanded ? 'Hide details' : 'View details'}
+                          </button>
+                          {b.status !== 'approved' && (
+                            <button className="btn btn-success btn-sm" onClick={() => handleStatus(b.id, 'approved')}>
+                              Approve
+                            </button>
+                          )}
+                          {b.status !== 'rejected' && (
+                            <button className="btn btn-danger btn-sm" onClick={() => handleStatus(b.id, 'rejected')}>
+                              Reject
+                            </button>
+                          )}
+                          {b.status !== 'pending' && (
+                            <button className="btn btn-outline btn-sm" onClick={() => handleStatus(b.id, 'pending')}>
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan="9">
+                          <div style={{ padding: '0.75rem 0.5rem', background: 'var(--surface)', borderRadius: '0.5rem', lineHeight: 1.6 }}>
+                            <div><strong>Location:</strong> {b.location || 'Not provided'}</div>
+                            <div><strong>Message:</strong> {b.message || 'No additional message'}</div>
+                            <div><strong>Requested on:</strong> {b.createdAt ? new Date(b.createdAt).toLocaleString() : '—'}</div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

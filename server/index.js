@@ -37,19 +37,24 @@ function authMiddleware(req, res, next) {
 // --- Public API ---
 
 app.post('/api/bookings', (req, res) => {
-  const { fullName, phone, email, eventType, preferredDate, guestCount, budgetRange, location, message } = req.body;
+  try {
+    const { fullName, phone, email, eventType, preferredDate, guestCount, budgetRange, location, message } = req.body;
 
-  if (!fullName || !phone || !email || !eventType || !preferredDate || !guestCount || !budgetRange || !location) {
-    return res.status(400).json({ error: 'All required fields must be filled' });
+    if (!fullName || !phone || !email || !eventType || !preferredDate || !guestCount || !budgetRange || !location) {
+      return res.status(400).json({ error: 'All required fields must be filled' });
+    }
+
+    const id = generateBookingId();
+    db.prepare(`
+      INSERT INTO bookings (id, full_name, phone, email, event_type, preferred_date, guest_count, budget_range, location, message, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    `).run(id, fullName, phone, email, eventType, preferredDate, parseInt(guestCount), budgetRange, location, message || '');
+
+    res.status(201).json({ id, message: 'Booking request submitted successfully' });
+  } catch (err) {
+    console.error('Booking error:', err);
+    res.status(500).json({ error: err.message || 'Failed to submit booking' });
   }
-
-  const id = generateBookingId();
-  db.prepare(`
-    INSERT INTO bookings (id, full_name, phone, email, event_type, preferred_date, guest_count, budget_range, location, message, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-  `).run(id, fullName, phone, email, eventType, preferredDate, parseInt(guestCount), budgetRange, location, message || '');
-
-  res.status(201).json({ id, message: 'Booking request submitted successfully' });
 });
 
 // --- Admin Auth ---
