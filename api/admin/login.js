@@ -1,9 +1,9 @@
 const crypto = require('crypto');
-const { saveSession, isValidSession } = require('./_utils/storage');
+const { saveSession, initializeDB } = require('../_utils/storage');
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '1234';
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -19,12 +19,13 @@ function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
+      await initializeDB();
       const { pin } = req.body;
       if (pin !== ADMIN_PIN) {
         return res.status(401).json({ error: 'Invalid PIN' });
       }
       const token = crypto.randomBytes(32).toString('hex');
-      saveSession(token);
+      await saveSession(token);
       res.json({ token, warning: 'This is a prototype login. Replace with real authentication before going live.' });
     } catch (err) {
       console.error('Login error:', err);

@@ -1,15 +1,15 @@
-const { deleteSession, isValidSession } = require('../_utils/storage');
+const { deleteSession, isValidSession, initializeDB } = require('../_utils/storage');
 
-function authMiddleware(req, res) {
+async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !isValidSession(token)) {
+  if (!token || !(await isValidSession(token))) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }
   return token;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -24,11 +24,12 @@ function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const token = authMiddleware(req, res);
-    if (!token) return;
-
     try {
-      deleteSession(token);
+      await initializeDB();
+      const token = await authMiddleware(req, res);
+      if (!token) return;
+
+      await deleteSession(token);
       res.json({ message: 'Logged out' });
     } catch (err) {
       console.error('Logout error:', err);

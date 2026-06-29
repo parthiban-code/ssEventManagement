@@ -1,15 +1,15 @@
-const { getBookings, updateBooking, isValidSession } = require('../_utils/storage');
+const { getBookings, updateBooking, isValidSession, initializeDB } = require('../_utils/storage');
 
-function authMiddleware(req, res) {
+async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !isValidSession(token)) {
+  if (!token || !(await isValidSession(token))) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }
   return token;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,PATCH,OPTIONS');
@@ -23,11 +23,17 @@ function handler(req, res) {
     return;
   }
 
-  if (!authMiddleware(req, res)) return;
+  try {
+    await initializeDB();
+  } catch (err) {
+    console.error('DB init error:', err);
+  }
+
+  if (!(await authMiddleware(req, res))) return;
 
   if (req.method === 'GET') {
     try {
-      const bookings = getBookings();
+      const bookings = await getBookings();
       res.json(bookings);
     } catch (err) {
       console.error('Get bookings error:', err);
@@ -46,7 +52,7 @@ function handler(req, res) {
         return res.status(400).json({ error: 'Invalid status' });
       }
 
-      const updated = updateBooking(id, { status });
+      const updated = await updateBooking(id, { status });
       if (!updated) {
         return res.status(404).json({ error: 'Booking not found' });
       }

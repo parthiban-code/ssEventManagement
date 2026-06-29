@@ -1,15 +1,15 @@
-const { getBookings, isValidSession } = require('../_utils/storage');
+const { getBookings, isValidSession, initializeDB } = require('../_utils/storage');
 
-function authMiddleware(req, res) {
+async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !isValidSession(token)) {
+  if (!token || !(await isValidSession(token))) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }
   return token;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -24,9 +24,10 @@ function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    if (!authMiddleware(req, res)) return;
-
     try {
+      await initializeDB();
+      if (!(await authMiddleware(req, res))) return;
+
       const { month, year } = req.query;
       const m = month || new Date().getMonth() + 1;
       const y = year || new Date().getFullYear();
@@ -36,9 +37,9 @@ function handler(req, res) {
       const endYear = m === 12 ? parseInt(y) + 1 : y;
       const endDate = new Date(endYear, endMonth - 1, 1);
 
-      const bookings = getBookings();
+      const bookings = await getBookings();
       const events = bookings.filter(b => {
-        const bDate = new Date(b.preferredDate);
+        const bDate = new Date(b.preferred_date);
         return b.status === 'approved' && bDate >= startDate && bDate < endDate;
       });
 

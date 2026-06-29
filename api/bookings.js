@@ -1,4 +1,4 @@
-const { saveBooking, getBookings } = require('./_utils/storage');
+const { saveBooking, getBookings, initializeDB } = require('./_utils/storage');
 
 function generateBookingId() {
   const date = new Date();
@@ -7,7 +7,7 @@ function generateBookingId() {
   return `${prefix}-${suffix}`;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,6 +20,12 @@ function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
+  }
+
+  try {
+    await initializeDB();
+  } catch (err) {
+    console.error('DB init error:', err);
   }
 
   if (req.method === 'POST') {
@@ -43,10 +49,9 @@ function handler(req, res) {
         location,
         message: message || '',
         status: 'pending',
-        createdAt: new Date().toISOString(),
       };
 
-      saveBooking(booking);
+      await saveBooking(booking);
       res.status(201).json({ id, message: 'Booking request submitted successfully' });
     } catch (err) {
       console.error('Booking error:', err);
@@ -54,7 +59,7 @@ function handler(req, res) {
     }
   } else if (req.method === 'GET') {
     try {
-      const bookings = getBookings();
+      const bookings = await getBookings();
       res.json(bookings);
     } catch (err) {
       console.error('Get bookings error:', err);

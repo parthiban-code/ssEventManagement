@@ -1,15 +1,15 @@
-const { getBookings, isValidSession } = require('../_utils/storage');
+const { getBookings, isValidSession, initializeDB } = require('../_utils/storage');
 
-function authMiddleware(req, res) {
+async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !isValidSession(token)) {
+  if (!token || !(await isValidSession(token))) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }
   return token;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -24,16 +24,17 @@ function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    if (!authMiddleware(req, res)) return;
-
     try {
-      const bookings = getBookings();
+      await initializeDB();
+      if (!(await authMiddleware(req, res))) return;
+
+      const bookings = await getBookings();
       const clientsMap = {};
 
       bookings.forEach(b => {
         if (!clientsMap[b.phone]) {
           clientsMap[b.phone] = {
-            name: b.fullName,
+            name: b.full_name,
             phone: b.phone,
             email: b.email,
             requestCount: 0,
@@ -43,10 +44,10 @@ function handler(req, res) {
         }
         clientsMap[b.phone].requestCount += 1;
         const lastRequest = clientsMap[b.phone].lastRequest ? new Date(clientsMap[b.phone].lastRequest) : new Date(0);
-        const thisRequest = new Date(b.createdAt);
+        const thisRequest = new Date(b.created_at);
         if (thisRequest > lastRequest) {
-          clientsMap[b.phone].lastRequest = b.createdAt;
-          clientsMap[b.phone].lastEventType = b.eventType;
+          clientsMap[b.phone].lastRequest = b.created_at;
+          clientsMap[b.phone].lastEventType = b.event_type;
         }
       });
 

@@ -1,15 +1,15 @@
-const { getBookings, isValidSession } = require('../_utils/storage');
+const { getBookings, isValidSession, initializeDB } = require('../_utils/storage');
 
-function authMiddleware(req, res) {
+async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !isValidSession(token)) {
+  if (!token || !(await isValidSession(token))) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }
   return token;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -24,10 +24,11 @@ function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    if (!authMiddleware(req, res)) return;
-
     try {
-      const bookings = getBookings();
+      await initializeDB();
+      if (!(await authMiddleware(req, res))) return;
+
+      const bookings = await getBookings();
       const pending = bookings.filter(b => b.status === 'pending').length;
       const confirmed = bookings.filter(b => b.status === 'approved').length;
       const uniqueClients = new Set(bookings.map(b => b.phone)).size;
@@ -35,8 +36,8 @@ function handler(req, res) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const upcoming = bookings
-        .filter(b => b.status === 'approved' && new Date(b.preferredDate) >= today)
-        .sort((a, b) => new Date(a.preferredDate) - new Date(b.preferredDate))
+        .filter(b => b.status === 'approved' && new Date(b.preferred_date) >= today)
+        .sort((a, b) => new Date(a.preferred_date) - new Date(b.preferred_date))
         .slice(0, 10);
 
       res.json({
