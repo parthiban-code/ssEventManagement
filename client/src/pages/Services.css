@@ -1,0 +1,98 @@
+.services-full-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.service-full-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.service-full-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.service-full-image {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+}
+
+.service-full-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.service-full-card:hover .service-full-image img {
+  transform: scale(1.08);
+}
+
+.service-full-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(22, 34, 58, 0.7), transparent);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 1.25rem;
+  color: var(--gold);
+}
+
+.service-full-body {
+  padding: 1.5rem;
+}
+
+.service-full-body h3 {
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+}
+
+.service-name-ta {
+  display: block;
+  font-size: 1rem;
+  color: var(--maroon);
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
+.service-full-body p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.75rem;
+}
+
+.services-cta {
+  text-align: center;
+  padding: 3rem 0 1rem;
+}
+
+.services-cta h2 {
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.services-cta p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.services-cta-btns {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .services-full-grid {
+    grid-template-columns: 1fr;
+  }
+}

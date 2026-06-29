@@ -1,0 +1,89 @@
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+.contact-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.contact-card {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.contact-card.highlight {
+  border: 2px solid var(--gold);
+  background: linear-gradient(135deg, #fffef8, var(--white));
+}
+
+.contact-icon {
+  font-size: 1.75rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.contact-card h3 {
+  color: var(--navy);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.contact-value {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--maroon);
+  margin-bottom: 0.5rem;
+}
+
+.contact-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.contact-card .btn {
+  margin-top: 1rem;
+}
+
+.contact-info h2 {
+  color: var(--navy);
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.contact-info > p {
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.contact-note {
+  background: rgba(31, 75, 71, 0.08);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--teal);
+}
+
+.contact-note h4 {
+  color: var(--teal);
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.contact-note p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
