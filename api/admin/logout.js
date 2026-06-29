@@ -1,9 +1,14 @@
-const { deleteSession, isValidSession, initializeDB } = require('../_utils/storage');
+const login = require('./login');
 
 async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !(await isValidSession(token))) {
+  if (!token) {
     res.status(401).json({ error: 'Unauthorized' });
+    return null;
+  }
+  const payload = login.verifyToken(token);
+  if (!payload || payload.type !== 'admin') {
+    res.status(401).json({ error: 'Invalid token' });
     return null;
   }
   return token;
@@ -25,11 +30,10 @@ async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      await initializeDB();
-      const token = await authMiddleware(req, res);
+      const token = authMiddleware(req, res);
       if (!token) return;
 
-      await deleteSession(token);
+      // JWT is stateless, no need to delete from database
       res.json({ message: 'Logged out' });
     } catch (err) {
       console.error('Logout error:', err);
@@ -41,3 +45,4 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
+

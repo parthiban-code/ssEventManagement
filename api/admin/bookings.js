@@ -1,9 +1,15 @@
-const { getBookings, updateBooking, isValidSession, initializeDB } = require('../_utils/storage');
+const { getBookings, updateBooking, initializeDB } = require('../_utils/storage');
+const login = require('./login');
 
 async function authMiddleware(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !(await isValidSession(token))) {
+  if (!token) {
     res.status(401).json({ error: 'Unauthorized' });
+    return null;
+  }
+  const payload = login.verifyToken(token);
+  if (!payload || payload.type !== 'admin') {
+    res.status(401).json({ error: 'Invalid token' });
     return null;
   }
   return token;
