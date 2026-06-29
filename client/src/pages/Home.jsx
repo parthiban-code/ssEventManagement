@@ -49,7 +49,7 @@ export default function Home() {
       <section className="hero">
         <div className="hero-bg">
           <img
-            src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&h=900&fit=crop"
+            src="https://images.pexels.com/photos/1103242/pexels-photo-1103242.jpeg?auto=compress&cs=tinysrgb&w=1600"
             alt="Grand wedding celebration"
           />
           <div className="hero-overlay" />
