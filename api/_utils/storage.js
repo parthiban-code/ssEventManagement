@@ -54,10 +54,12 @@ async function initializeDB() {
 async function getBookings() {
   try {
     if (!sql) {
-      console.log('Using fallback bookings storage');
+      console.warn('⚠️ Using fallback in-memory bookings storage (not persisted)', bookingsData.length, 'bookings');
       return bookingsData;
     }
+    console.log('🔍 Querying database for bookings...');
     const result = await sql`SELECT * FROM bookings ORDER BY created_at DESC`;
+    console.log('✅ Database query returned', result.rows.length, 'bookings');
     // Convert snake_case to camelCase for client
     return result.rows.map(row => ({
       id: row.id,
@@ -74,7 +76,8 @@ async function getBookings() {
       createdAt: row.created_at
     }));
   } catch (err) {
-    console.error('Get bookings error:', err);
+    console.error('❌ Get bookings error:', err.message);
+    console.warn('⚠️ Falling back to in-memory storage:', bookingsData.length, 'bookings');
     return bookingsData;
   }
 }
@@ -82,15 +85,19 @@ async function getBookings() {
 async function saveBooking(booking) {
   try {
     if (!sql) {
+      console.warn('⚠️ Saving to in-memory storage (not persisted):', booking.id);
       bookingsData.push(booking);
       return;
     }
+    console.log('💾 Saving to database:', booking.id);
     await sql`
       INSERT INTO bookings (id, full_name, phone, email, event_type, preferred_date, guest_count, budget_range, location, message, status)
       VALUES (${booking.id}, ${booking.fullName}, ${booking.phone}, ${booking.email}, ${booking.eventType}, ${booking.preferredDate}, ${booking.guestCount}, ${booking.budgetRange}, ${booking.location}, ${booking.message}, ${booking.status})
     `;
+    console.log('✅ Booking saved to database:', booking.id);
   } catch (err) {
-    console.error('Save booking error:', err);
+    console.error('❌ Save booking error:', err.message);
+    console.warn('⚠️ Falling back to in-memory storage:', booking.id);
     bookingsData.push(booking);
   }
 }

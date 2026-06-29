@@ -52,6 +52,7 @@ async function handler(req, res) {
       };
 
       await saveBooking(booking);
+      console.log('✅ Booking saved:', id);
       res.status(201).json({ id, message: 'Booking request submitted successfully' });
     } catch (err) {
       console.error('Booking error:', err);

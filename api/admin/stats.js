@@ -36,11 +36,14 @@ async function handler(req, res) {
       if (!token) return;
 
       const bookings = await getBookings();
-      console.log('Fetched bookings:', bookings.length, bookings);
+      console.log('📊 Stats: Fetched', bookings.length, 'bookings');
+      console.log('📊 First few bookings:', bookings.slice(0, 2));
       
       const pending = bookings.filter(b => b.status === 'pending').length;
       const confirmed = bookings.filter(b => b.status === 'approved').length;
       const uniqueClients = new Set(bookings.map(b => b.phone)).size;
+
+      console.log('📊 Counts - Pending:', pending, 'Confirmed:', confirmed, 'Unique:', uniqueClients, 'Total:', bookings.length);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

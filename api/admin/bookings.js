@@ -41,6 +41,7 @@ async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const bookings = await getBookings();
+      console.log('📋 Admin Bookings: Returning', bookings.length, 'bookings');
       res.json(bookings);
     } catch (err) {
       console.error('Get bookings error:', err);
