@@ -1,13 +1,19 @@
 let sql;
 
-try {
-  const postgres = require('@vercel/postgres');
-  sql = postgres.sql;
-} catch (err) {
-  console.log('Vercel Postgres not available, using fallback');
+// Check if Vercel Postgres is available
+if (process.env.POSTGRES_URL) {
+  try {
+    const postgres = require('@vercel/postgres');
+    sql = postgres.sql;
+    console.log('✓ Connected to Vercel Postgres');
+  } catch (err) {
+    console.error('Failed to load @vercel/postgres:', err);
+  }
+} else {
+  console.warn('POSTGRES_URL not set - sessions will not persist across invocations');
 }
 
-// Fallback in-memory storage for development/errors
+// Fallback in-memory storage (won't persist across serverless invocations)
 const bookingsData = [];
 const sessionsData = {};
 
@@ -39,15 +45,18 @@ async function initializeDB() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `;
+    console.log('✓ Database tables ready');
   } catch (err) {
     console.error('DB initialization error:', err);
-    // Continue even if there's an error
   }
 }
 
 async function getBookings() {
   try {
-    if (!sql) throw new Error('SQL not available');
+    if (!sql) {
+      console.log('Using fallback bookings storage');
+      return bookingsData;
+    }
     const result = await sql`SELECT * FROM bookings ORDER BY created_at DESC`;
     return result.rows;
   } catch (err) {
@@ -58,7 +67,10 @@ async function getBookings() {
 
 async function saveBooking(booking) {
   try {
-    if (!sql) throw new Error('SQL not available');
+    if (!sql) {
+      bookingsData.push(booking);
+      return;
+    }
     await sql`
       INSERT INTO bookings (id, full_name, phone, email, event_type, preferred_date, guest_count, budget_range, location, message, status)
       VALUES (${booking.id}, ${booking.fullName}, ${booking.phone}, ${booking.email}, ${booking.eventType}, ${booking.preferredDate}, ${booking.guestCount}, ${booking.budgetRange}, ${booking.location}, ${booking.message}, ${booking.status})
@@ -71,7 +83,14 @@ async function saveBooking(booking) {
 
 async function updateBooking(id, updates) {
   try {
-    if (!sql) throw new Error('SQL not available');
+    if (!sql) {
+      const index = bookingsData.findIndex(b => b.id === id);
+      if (index !== -1) {
+        bookingsData[index] = { ...bookingsData[index], ...updates };
+        return bookingsData[index];
+      }
+      return null;
+    }
     const result = await sql`
       UPDATE bookings 
       SET status = ${updates.status}
@@ -86,38 +105,52 @@ async function updateBooking(id, updates) {
       bookingsData[index] = { ...bookingsData[index], ...updates };
       return bookingsData[index];
     }
-    throw err;
+    return null;
   }
 }
 
 async function saveSession(token) {
+  if (!sql) {
+    console.error('❌ No database connection for sessions - login will not persist');
+    sessionsData[token] = { createdAt: new Date().toISOString() };
+    return;
+  }
+  
   try {
-    if (!sql) throw new Error('SQL not available');
     await sql`INSERT INTO admin_sessions (token) VALUES (${token})`;
+    console.log('✓ Session saved');
   } catch (err) {
     console.error('Save session error:', err);
-    sessionsData[token] = { createdAt: new Date().toISOString() };
+    throw err;
   }
 }
 
 async function deleteSession(token) {
+  if (!sql) {
+    delete sessionsData[token];
+    return;
+  }
+  
   try {
-    if (!sql) throw new Error('SQL not available');
     await sql`DELETE FROM admin_sessions WHERE token = ${token}`;
   } catch (err) {
     console.error('Delete session error:', err);
-    delete sessionsData[token];
   }
 }
 
 async function isValidSession(token) {
+  if (!sql) {
+    const valid = !!sessionsData[token];
+    console.warn('Session check (fallback):', token.substring(0, 8) + '...', valid);
+    return valid;
+  }
+  
   try {
-    if (!sql) throw new Error('SQL not available');
     const result = await sql`SELECT * FROM admin_sessions WHERE token = ${token}`;
     return result.rows.length > 0;
   } catch (err) {
     console.error('Validate session error:', err);
-    return !!sessionsData[token];
+    return false;
   }
 }
 
